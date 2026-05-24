@@ -19,6 +19,7 @@ jobs:
           repository: rudrankriyam/winget-pkgs
           ref: rorkai-asc-1.5.0
           path: winget-pkgs
+          sparse-checkout: manifests/r/Rorkai/ASC/1.5.1
 
       - name: Validate and install local manifest
         shell: pwsh
@@ -27,6 +28,7 @@ jobs:
           $manifest = "manifests/r/Rorkai/ASC/1.5.1"
 
           winget --version
+          winget settings --enable LocalManifestFiles
           winget validate --manifest $manifest
           winget install --manifest $manifest --disable-interactivity --accept-source-agreements --accept-package-agreements
 
@@ -39,3 +41,7 @@ jobs:
         shell: pwsh
         run: |
           winget uninstall --id Rorkai.ASC --exact --disable-interactivity --accept-source-agreements
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Package was not installed or uninstall was not needed."
+            exit 0
+          }
