@@ -1,0 +1,41 @@
+name: WinGet local manifest smoke
+
+on:
+  push:
+    branches:
+      - codex/winget-local-manifest-smoke
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  validate-and-install:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out WinGet package PR branch
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          repository: rudrankriyam/winget-pkgs
+          ref: rorkai-asc-1.5.0
+          path: winget-pkgs
+
+      - name: Validate and install local manifest
+        shell: pwsh
+        working-directory: winget-pkgs
+        run: |
+          $manifest = "manifests/r/Rorkai/ASC/1.5.1"
+
+          winget --version
+          winget validate --manifest $manifest
+          winget install --manifest $manifest --disable-interactivity --accept-source-agreements --accept-package-agreements
+
+          $env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User")
+          $asc = Get-Command asc -ErrorAction Stop
+          & $asc.Source version
+
+      - name: Uninstall package
+        if: always()
+        shell: pwsh
+        run: |
+          winget uninstall --id Rorkai.ASC --exact --disable-interactivity --accept-source-agreements
